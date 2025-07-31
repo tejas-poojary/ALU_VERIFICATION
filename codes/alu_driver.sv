@@ -46,7 +46,7 @@ class alu_driver;
       begin
         trans_drv=new();
         mbx_gd.get(trans_drv);
-        //$display("Driver got values from generator at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
+        $display("Driver got values from generator at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
 
        @(vif_drv.drv_cb);
         begin
@@ -62,10 +62,10 @@ class alu_driver;
                     vif_drv.drv_cb.cmd<=trans_drv.cmd;
                     vif_drv.drv_cb.mode<=trans_drv.mode;
                     vif_drv.drv_cb.inp_valid<=trans_drv.inp_valid;
-                    //$display("I am also putting to mailbox at %0t and OPA=%0d",$time,trans_drv.opa);
-                    mbx_dr.put(trans_drv.copy());
+                    mbx_dr.put(trans_drv);
+                    $display("Mailbox put happened at %0t before entering 16 clock cycle normal sending at first edge for transaction %0d",$time,i+1);
 
-                    //$display("Driver drived values normally at first edge of 16 cycle at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
+                    $display("Driver drived values normally at first edge of 16 cycle at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
 
                 for(int j=0;j<16;j++)
                 begin
@@ -81,21 +81,22 @@ class alu_driver;
                       vif_drv.drv_cb.cmd<=trans_drv.cmd;
                       vif_drv.drv_cb.mode<=trans_drv.mode;
                       vif_drv.drv_cb.inp_valid<=trans_drv.inp_valid;
-                      mbx_dr.put(trans_drv.copy());
-                      //$display("Driver driving values because it got 11 at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
+                      $display("Driver driving values because it got 11 at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
                       cg_drv.sample();
                       $display("INPUT FUNCTIONAL COVERAGE =%.2f ",cg_drv.get_coverage());
+                      mbx_dr.put(trans_drv);
+                      $display("Mailbox put happened at %0t inside 16 loop when i got 11 for transaction %0d",$time,i+1);
                      break;
                    end
                   else
                     begin
-                      //$display("Driver inside the else part repeat 16 loop but didnt get 11 at %0t",$time);
+                      $display("Driver inside the else part repeat 16 loop but didnt get 11 at %0t",$time);
                       trans_drv.mode.rand_mode(0);
                       trans_drv.cmd.rand_mode(0);
                       trans_drv.ce.rand_mode(0);   //optional to prevent the non existence of 2'b11 within 16 cycles.
                       trans_drv.randomize();  //randomize with mode 0 for mode and cmd
 
-                      //$display("Driver driving constrained values because it didnt get 11 at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
+                      $display("Driver driving constrained values because it didnt get 11 at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
                       cg_drv.sample();
                       $display("INPUT FUNCTIONAL COVERAGE =%.2f ",cg_drv.get_coverage());
                     end
@@ -111,8 +112,9 @@ class alu_driver;
               vif_drv.drv_cb.cmd<=trans_drv.cmd;
               vif_drv.drv_cb.mode<=trans_drv.mode;
               vif_drv.drv_cb.inp_valid<=trans_drv.inp_valid;
-              mbx_dr.put(trans_drv.copy());
-              //$display("Driver driving values because it got single operand operation at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
+              mbx_dr.put(trans_drv);
+              $display("Mailbox put happened at %0t outside the 16 logic for direct single operand for transaction %0d",$time,i+1);
+              $display("Driver driving values because it got single operand operation at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
               cg_drv.sample();
               $display("INPUT FUNCTIONAL COVERAGE =%.2f ",cg_drv.get_coverage());
             end
@@ -126,8 +128,9 @@ class alu_driver;
               vif_drv.drv_cb.cmd<=trans_drv.cmd;
               vif_drv.drv_cb.mode<=trans_drv.mode;
               vif_drv.drv_cb.inp_valid<=trans_drv.inp_valid;
-              mbx_dr.put(trans_drv.copy());
-              //$display("Driver driving values because it got 11 directly at first edge without waiting for 16 cycles at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
+              mbx_dr.put(trans_drv);
+              $display("Mailbox put happened at %0t for direct 11 for transaction %0d",$time,i+1);
+              $display("Driver driving values because it got 11 directly at first edge without waiting for 16 cycles at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d",$time,trans_drv.opa,trans_drv.opb,trans_drv.cin,trans_drv.ce,trans_drv.mode,trans_drv.cmd,trans_drv.inp_valid);
               cg_drv.sample();
               $display("INPUT FUNCTIONAL COVERAGE =%.2f ",cg_drv.get_coverage());
             end
