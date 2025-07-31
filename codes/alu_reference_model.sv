@@ -40,7 +40,7 @@ function new(mailbox #(alu_transaction) mbx_dr,
     this.vif_ref=vif_ref;
   endfunction
 
-  int shift_value,got;
+  int shift_value,got,inside_16;
   localparam int required_bits = $clog2(`n);
 
 
@@ -51,9 +51,14 @@ task start();
     begin
       got=0;  //make got zero initially foreach transaction
       ref_trans=new();
-      @(vif_ref.ref_cb);
-     mbx_dr.get(ref_trans);
-
+      if(inside_16==1)
+        mbx_dr.get(ref_trans);
+      else
+        begin
+          @(vif_ref.ref_cb);
+          mbx_dr.get(ref_trans);
+        end
+        inside_16=0;
      $display("Reference model got values from first get for transaction %0d at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,INP_VALID=%0d,CMD=%0d",i+1,$time,ref_trans.opa,ref_trans.opb,ref_trans.cin,ref_trans.ce,ref_trans.mode,ref_trans.inp_valid,ref_trans.cmd);
          if(vif_ref.ref_cb.reset==1)
            begin
@@ -74,14 +79,14 @@ task start();
                        if(((ref_trans.mode==1)&& (ref_trans.cmd inside {0,1,2,3,8,9,10})) || ((ref_trans.mode==0)&& (ref_trans.cmd inside {0,1,2,3,4,5,12,13})))   //inp_valid is 01 or 10 at first clock but cmd is 2 operand operation
                          begin
 
-                           mbx_dr.get(ref_trans);
+                           mbx_dr.get(ref_trans);  // removed get hereeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 
-                           //$display("Inside the 16 cycle logic and");
-                           //$display("Reference model got values from second get for transaction %0d at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,INP_VALID=%0d,CMD=%0d",i+1,$time,ref_trans.opa,ref_trans.opb,ref_trans.cin,ref_trans.ce,ref_trans.mode,ref_trans.inp_valid,ref_trans.cmd);
+                           $display("Inside the 16 cycle logic and");
+                           $display("Reference model got values from second get for transaction %0d at %0t:OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,INP_VALID=%0d,CMD=%0d",i+1,$time,ref_trans.opa,ref_trans.opb,ref_trans.cin,ref_trans.ce,ref_trans.mode,ref_trans.inp_valid,ref_trans.cmd);
 
                            repeat(16)@(vif_ref.ref_cb)      //or for loop
                            begin
-
+                             inside_16=1;
                            if(ref_trans.inp_valid==2'b11)  //perform all operations also
                             begin
                               got=1;
@@ -282,7 +287,7 @@ task start();
            end //end of else mode=0
       end     //end of single input operands
   end      // end of check for input valid 01 or 10
-else    //else if 11 bcz 00 is constrained
+else if (ref_trans.inp_valid==2'b11)    //else if 11 directly
   begin
       if(ref_trans.mode==1)
         begin
@@ -405,8 +410,18 @@ else    //else if 11 bcz 00 is constrained
                       endcase
                   end       //end of else mode==0
             end        //end of inp_valid=11 directly case
-        end    //end of ce=1
-     else   //if ce=0
+   else   //input valid is 00
+     begin
+       ref_trans.res=ref_trans.res;
+       ref_trans.oflow=ref_trans.oflow;
+       ref_trans.cout=ref_trans.cout;
+       ref_trans.g=ref_trans.g;
+       ref_trans.l=ref_trans.l;
+       ref_trans.e=ref_trans.e;
+       ref_trans.err=ref_trans.err;
+     end  //end of 00
+  end    //end of ce=1
+else   //if ce=0
     begin
        ref_trans.res=ref_trans.res;
        ref_trans.oflow=ref_trans.oflow;
@@ -419,11 +434,11 @@ else    //else if 11 bcz 00 is constrained
   end   //end of else loop for reset!=1
 
 if( ref_trans.inp_valid inside {0,1,2,3} && ((ref_trans.mode==1 && ref_trans.cmd inside {0,1,2,3,4,5,6,7,8})|| (ref_trans.mode==0 && ref_trans.cmd inside {0,1,2,3,4,5,6,7,8,9,10,11,12,13})))
- repeat(2)@(vif_ref.ref_cb);
+ repeat(1)@(vif_ref.ref_cb);
 else if(ref_trans.inp_valid==3 && ref_trans.mode==1 && ref_trans.cmd inside {9,10})
- repeat(3)@(vif_ref.ref_cb);
+ repeat(2)@(vif_ref.ref_cb);
 
-mbx_rs.put(ref_trans.copy());    //put to the mailbox
+mbx_rs.put(ref_trans);    //put to the mailbox
 
 $display("Reference model putting values to the mailbox of scoreboard for transaction %0d at %0t :OPA=%0d,OPB=%0d,CIN=%0d,CE=%0d,MODE=%0d,CMD=%0d,INP_VALID=%0d,RES=%0d,ERR=%0d,COUT=%0d,OFLOW=%0d,G=%0d,L=%0d,E=%0d",i+1,$time,ref_trans.opa,ref_trans.opb,ref_trans.cin,ref_trans.ce,ref_trans.mode,ref_trans.cmd,ref_trans.inp_valid,ref_trans.res,ref_trans.err,ref_trans.cout,ref_trans.oflow,ref_trans.g,ref_trans.l,ref_trans.e);
 
@@ -434,3 +449,4 @@ endtask
 
 
 endclass
+
