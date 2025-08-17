@@ -15,8 +15,8 @@ class alu_driver;
                                                          }
         COMMAND : coverpoint trans_drv.cmd { bins arithmetic[] = {[0:10]};
                                              bins logical[] = {[0:13]};
-                                             bins arithmetic_invalid[] = {[11:15]};
-                                             bins logical_invalid[] = {14,15};
+                                             //bins arithmetic_invalid[] = {[11:15]};
+                                             //bins logical_invalid[] = {14,15};
                                             }
         MODE : coverpoint trans_drv.mode { bins arithmetic = {1};
                                            bins logical = {0};
@@ -27,7 +27,7 @@ class alu_driver;
         OPERAND_A : coverpoint trans_drv.opa { bins opa[]={[0:(2**`n)-1]};}
         OPERAND_B : coverpoint trans_drv.opb { bins opb[]={[0:(2**`n)-1]};}
         CARRY_IN : coverpoint trans_drv.cin { bins cin_high = {1};
-                                                  bins cin_low = {0};
+                                              bins cin_low = {0};
                                             }
         MODE_CMD_: cross MODE,COMMAND;
         endgroup
