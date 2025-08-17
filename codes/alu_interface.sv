@@ -60,7 +60,7 @@ endproperty
 
 
 //ROR/ROL error
-    assert property (@(posedge clk) disable iff(reset) (ce && mode && (cmd == `ROR_A_B || cmd == `ROL_A_B) && $countones(opb) > `required_bits + 1) |=> ##1(err==1'b1) )
+    assert property (@(posedge clk) disable iff(reset) (ce && mode && (cmd == `ROR_A_B || cmd == `ROL_A_B) && opb > `n-1) |=> ##1(err==1'b1) )
         else $info(" ERROR FLAG IS NOT RAISED");
 
 //CMD out of range
