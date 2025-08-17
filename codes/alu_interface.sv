@@ -64,11 +64,11 @@ endproperty
         else $info(" ERROR FLAG IS NOT RAISED");
 
 //CMD out of range
-  assert property (@(posedge clk) (mode && cmd > 10) |=> err)
+     assert property (@(posedge clk) (mode && cmd > 10) |=>##1(err==1'b1))
         else $info("CMD INVALID FOR ARITHMETIC BUT ERR NOT RAISED");
 
 //CMD out of range logical
-  assert property (@(posedge clk) (!mode && cmd > 13) |=> err)
+  assert property (@(posedge clk) (!mode && cmd > 13) |=>##1(err==1'b1))
   else $info("CMD INVALID FOR LOGICAL BUT ERR NOT RAISED");
 
 
@@ -80,12 +80,12 @@ endproperty
       else $info("Invalid INP_VALID value: %b at time %0t", INP_VALID, $time);
 
 // INP_VALID 00 case
- assert property (@(posedge CLK) (INP_VALID == 2'b00) |=> ERR )
+ assert property (@(posedge CLK) (INP_VALID == 2'b00) |=>##1(err==1'b1) )
       else $info("ERROR NOT raised");
 
 //CE assertion
  property ppt_clock_enable;
-   @(posedge clk) disable iff(reset) !ce |-> ##1 ($stable(res) && $stable(cout) && $stable(oflow) && $stable(g) && $stable(l) && $stable(e) && $stable(err));
+  @(posedge clk) disable iff(reset) !ce |=> ##1 ($stable(res) && $stable(cout) && $stable(oflow) && $stable(g) && $stable(l) && $stable(e) && $stable(err));
  endproperty
   assert property(ppt_clock_enable)
     else $info("Clock enable assertion failed at time %0t", $time);
