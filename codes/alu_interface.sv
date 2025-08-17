@@ -35,7 +35,7 @@ modport ALU_REF(clocking ref_cb);
 
 //Reset assertion
 property ppt_reset;
-  @(posedge clk) reset |=> ##1 (res == 9'bzzzzzzzz && err == 1'bz && e == 1'bz && g == 1'bz && l == 1'bz && cout == 1'bz && oflow == 1'bz)
+ @(posedge clk) reset |-> (res == 9'bzzzzzzzz && err == 1'bz && e == 1'bz && g == 1'bz && l == 1'bz && cout == 1'bz && oflow == 1'bz)
  endproperty
 assert property(ppt_reset)
     $display("RST assertion PASSED at time %0t", $time);
@@ -53,14 +53,14 @@ endproperty
 
 //16- cycle logical TIMEOUT assertion
 property ppt_timeout_logical;
-   @(posedge clk) disable iff(reset) (ce && (cmd == `AND || cmd == `OR || cmd == `NAND || cmd == `XOR || cmd == `XNOR || cmd == `NOR || cmd == `SHR1_A || cmd == `SHR1_B || cmd == `SHL1_A || cmd == `SHL1_B || cmd == `ROR_A_B  || cmd == `ROL_A_B) && (inp_valid == 2'b01 || inp_valid == 2'b10)) |-> ##16 (err == 1'b1);
+   @(posedge clk) disable iff(reset) (ce && (cmd == `AND || cmd == `OR || cmd == `NAND || cmd == `XOR || cmd == `XNOR || cmd == `NOR || cmd == `ROR_A_B  || cmd == `ROL_A_B) && (inp_valid == 2'b01 || inp_valid == 2'b10)) |-> ##16 (err == 1'b1);
 endproperty
    assert property(ppt_timeout_logical)
       else $error("Timeout assertion failed at time %0t", $time);
 
 
 //ROR/ROL error
-  assert property (@(posedge clk) disable iff(reset) (ce && mode && (cmd == `ROR_A_B || cmd == `ROL_A_B) && $countones(opb) > `ROR_WIDTH + 1) |=> ##[1:3] err )
+    assert property (@(posedge clk) disable iff(reset) (ce && mode && (cmd == `ROR_A_B || cmd == `ROL_A_B) && $countones(opb) > `required_bits + 1) |=> ##1(err==1'b1) )
         else $info(" ERROR FLAG IS NOT RAISED");
 
 //CMD out of range
